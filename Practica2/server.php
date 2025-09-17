@@ -15,31 +15,13 @@ function cliente($newc)
                     //echo join("\n",$parts);
                     unset($parts[0],$parts[2],$parts[3]); //nos quedamos con lo que queremos escribir del refresh
                     $parts = array_values($parts);
-                    $archivo = "peers/archivos.txt";
-                    $lineas = [];
-                    $fp = fopen($archivo, "a+");
-                    
-                    print_r(crear_matriz_peers());
+                    //print_r(matriz_peers_f());
+                    refresh_peers($parts);
 
 
 
 
 
-                    // $lineaActual = current($lineas);
-                    // $count = 0;
-                    // while ($lineaActual !== false) { //recorro el array de lineas  
-                    //     if ($lineaActual === $parts[0]) {
-                    //         echo "Encontrada la línea exacta: $lineaActual\n";
-                    //         echo $count."\n";
-                    //         break;
-                    //     }
-                    //     $count++;
-                    //     $lineaActual = next($lineas); // Mover al siguiente elemento
-                    // }
-                    // }
-                    $body = join("\n",$parts);
-                    fwrite($fp, $body."\n");
-                    fclose($fp);
                 }
                 exit(-1);
             }
@@ -65,13 +47,13 @@ function server_run(){
 }
 
 
-function crear_matriz_peers(){
+function matriz_peers_f(){ //crea la matriz de los peers para operar mas facil
     $archivo = "peers/archivos.txt";
     $lineas = [];
     $fp = fopen($archivo, "r");
     if ($fp) {
-    while (($linea = fgets($fp)) !== false) { //se obtine array de lineas
-        $lineas[] = trim($linea); // trim elimina saltos de línea   
+    while (($linea = fgets($fp)) !== false) {
+        $lineas[] = trim($linea);  
     }
     $a = false; 
     $matriz = [];
@@ -81,8 +63,8 @@ function crear_matriz_peers(){
         if ($a === false){
             $a = true;
         }else{
-        $matriz[] = $fila; // agregamos la fila completa a la matriz
-        $fila = [];        // reiniciamos la fila
+        $matriz[] = $fila;
+        $fila = [];
         }
     }
         $fila[] = $valor;
@@ -92,30 +74,32 @@ function crear_matriz_peers(){
     }
     fclose($fp);
     }
-    return $matriz;
+    return $matriz;  
 }
 
-function search_host($host){ // para buscar en el refresh que archivos tiene ese peer
-    $matriz_peers = crear_matriz_peers();
-    foreach ($matriz_peers as $fila) {
-        foreach ($fila as $valor) {
-            if ($valor == $host){
-                //LO DEJO AQUI
-            }else{
-                break;
-            }    
-        }
-        echo "\n"; // salto de línea entre filas
-    }        
+function search_host_delete($host){ // para buscar en el refresh que archivos tiene ese peer y deletea el host y sus archivos
 }
 
 function search_archivo($archivo = null){ //busca el nombre de archivo en el txt
-    $matriz_peers = crear_matriz_peers();
-    if ($archivo == null){ 
-        $body = join("\n",$matriz_peers);
-        echo $body;
-    }else{
+    $matriz_peers = matriz_peers_f();
+}
 
-        return $host;
+function refresh_peers($parts){ //escribe despues de lo que esté escrito lo que ha mandado el cliente
+    //Falta hacer que busque el host y las lineas en las que está su info para borrarlo y escribir los que tiene nuevos
+    //no es lo ideal pero funciona
+    $matriz_peers = matriz_peers_f();
+    $newparts = [];
+    foreach($matriz_peers as $linea){
+        if($linea[0]!=$parts[0]){
+            $newparts[] = $linea;
+        }
     }
+    $newparts[] = $parts;
+    echo print_r($newparts);
+    $newnewparts = array_merge(...$newparts);
+    $archivo = "peers/archivos.txt";
+    $fp = fopen($archivo, "w");
+    $body = implode("\n", $newnewparts);
+    fwrite($fp, $body."\n");
+    fclose($fp);
 }

@@ -10,31 +10,44 @@ function cliente($newc)
                 exit();
             }
             elseif($lee!=false){
-                echo $lee;
-                exit(-1);
-            }
-            elseif($lee != false){
-                $line = strtok($lee, "\r\n");
-                $parts = explode(' ', $line, 3);
-                $path = $parts[1] ?? '/';
-                $path  = parse_url($path, PHP_URL_PATH) ?? '/';
-                $file_path = __DIR__ . $path;
+                $parts = preg_split('/[\r\n ]+/', $lee, -1, PREG_SPLIT_NO_EMPTY);
+                if ($parts[0] == "PUT"){
+                    //echo join("\n",$parts);
+                    unset($parts[0],$parts[2],$parts[3]); //nos quedamos con lo que queremos escribir del refresh
+                    $parts = array_values($parts);
+                    $archivo = "peers/archivos.txt";
+                    $lineas = [];
+                    $fp = fopen($archivo, "a+");
+                    
+                    print_r(crear_matriz_peers());
 
-                $content = file_get_contents($file_path);
-                $len = strlen($content);
-                socket_write($newc,  
-                    "HTTP/1.0 200 OK\r\n".
-                    "Content-lenght: $len\r\n".
-                    "\r\n".$content);
-                echo "client close";
+
+
+
+
+                    // $lineaActual = current($lineas);
+                    // $count = 0;
+                    // while ($lineaActual !== false) { //recorro el array de lineas  
+                    //     if ($lineaActual === $parts[0]) {
+                    //         echo "Encontrada la línea exacta: $lineaActual\n";
+                    //         echo $count."\n";
+                    //         break;
+                    //     }
+                    //     $count++;
+                    //     $lineaActual = next($lineas); // Mover al siguiente elemento
+                    // }
+                    // }
+                    $body = join("\n",$parts);
+                    fwrite($fp, $body."\n");
+                    fclose($fp);
+                }
                 exit(-1);
             }
         }
         exit(-1);
-    } else {
-        socket_close($newc);
-    }
+    } 
 }
+
 
 function server_run(){
     global $server_host, $server_port;
@@ -48,5 +61,61 @@ function server_run(){
             echo "Client has connected\n";
             cliente($newc);
         }
+    }
+}
+
+
+function crear_matriz_peers(){
+    $archivo = "peers/archivos.txt";
+    $lineas = [];
+    $fp = fopen($archivo, "r");
+    if ($fp) {
+    while (($linea = fgets($fp)) !== false) { //se obtine array de lineas
+        $lineas[] = trim($linea); // trim elimina saltos de línea   
+    }
+    $a = false; 
+    $matriz = [];
+    $fila = []; 
+    foreach ($lineas as $i => $valor) {
+    if (strpos($valor,"/host") !== false) {
+        if ($a === false){
+            $a = true;
+        }else{
+        $matriz[] = $fila; // agregamos la fila completa a la matriz
+        $fila = [];        // reiniciamos la fila
+        }
+    }
+        $fila[] = $valor;
+    }
+    if (!empty($fila)) {
+        $matriz[] = $fila;
+    }
+    fclose($fp);
+    }
+    return $matriz;
+}
+
+function search_host($host){ // para buscar en el refresh que archivos tiene ese peer
+    $matriz_peers = crear_matriz_peers();
+    foreach ($matriz_peers as $fila) {
+        foreach ($fila as $valor) {
+            if ($valor == $host){
+                //LO DEJO AQUI
+            }else{
+                break;
+            }    
+        }
+        echo "\n"; // salto de línea entre filas
+    }        
+}
+
+function search_archivo($archivo = null){ //busca el nombre de archivo en el txt
+    $matriz_peers = crear_matriz_peers();
+    if ($archivo == null){ 
+        $body = join("\n",$matriz_peers);
+        echo $body;
+    }else{
+
+        return $host;
     }
 }

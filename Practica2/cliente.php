@@ -43,4 +43,29 @@ function client_refresh($argv){
     
     echo "Refresh hecho\n";
 }
+
+function search_archivo_client($arch){ //busca el archivo con el nombre completo o parcial
+
+}
+
+function client_ux($argv){ //quedaría siempre cuando se conecte hacerle un refresh y cada x tiempo hacer un refresh por estar conectado
+    echo ">";
+    $options = ["search","descargar"];
+    while(true){
+        $instnew = trim(fgets(STDIN));
+        $inst = explode(" ",$instnew);
+        if($inst[0] === $options[0]){
+            echo $options[0];
+            exit(-1);
+        }elseif($inst[0] === $options[1]){
+            echo $options[1];
+            exit(-1);
+        }else{
+            echo "Tienes estas opciones: \n"
+            .$options[0]." trozo de archivo que quieras encontrar\n"
+            .$options[1]." nombre de archivo completo\n>";
+        }
+    }
+    exit(-1);
+}
 ?>

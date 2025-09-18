@@ -12,18 +12,13 @@ function cliente($newc)
             elseif($lee!=false){
                 $parts = preg_split('/[\r\n ]+/', $lee, -1, PREG_SPLIT_NO_EMPTY);
                 if ($parts[0] == "PUT"){
-                    //echo join("\n",$parts);
                     unset($parts[0],$parts[2],$parts[3]); //nos quedamos con lo que queremos escribir del refresh
                     $parts = array_values($parts);
-                    //print_r(matriz_peers_f());
                     refresh_peers($parts);
-
-
-
-
+                }
+                elseif($parts[0] == "GET"){
 
                 }
-                exit(-1);
             }
         }
         exit(-1);
@@ -77,10 +72,7 @@ function matriz_peers_f(){ //crea la matriz de los peers para operar mas facil
     return $matriz;  
 }
 
-function search_host_delete($host){ // para buscar en el refresh que archivos tiene ese peer y deletea el host y sus archivos
-}
-
-function search_archivo($archivo = null){ //busca el nombre de archivo en el txt
+function search_archivo_server($archivo = null){ //busca el nombre de archivo en el txt
     $matriz_peers = matriz_peers_f();
 }
 
@@ -95,7 +87,7 @@ function refresh_peers($parts){ //escribe despues de lo que esté escrito lo que
         }
     }
     $newparts[] = $parts;
-    echo print_r($newparts);
+    //echo print_r($newparts);
     $newnewparts = array_merge(...$newparts);
     $archivo = "peers/archivos.txt";
     $fp = fopen($archivo, "w");

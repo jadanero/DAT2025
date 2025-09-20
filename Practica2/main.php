@@ -2,7 +2,6 @@
 
 require_once "server.php";
 require_once "cliente.php";
-require_once "config.php";
 
 if (in_array("--server", $argv)) {
     server_run();

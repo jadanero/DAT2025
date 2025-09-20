@@ -1,5 +1,5 @@
 <?php
-
+require_once "config_server.php";
 function cliente($newc)
 {
     global $server_host, $server_port;
@@ -27,16 +27,42 @@ function cliente($newc)
 
 
 function server_run(){
-    global $server_host, $server_port;
-    $sock = socket_create(AF_INET, SOCK_STREAM, getprotobyname("tcp"));
-    socket_bind($sock, $server_host, $server_port);
-    socket_listen($sock, 10);
-    $i = 0;
+    global $server_host, $server_ports;
+    $host = $server_host;
+    $servers = [];
+    // Crear y preparar cada servidor
+    foreach ($server_ports as $port) {
+        $sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1); // reutilizar puerto rápido
+        socket_bind($sock, $host, $port);
+        socket_listen($sock);
+        $servers[] = $sock;
+        echo "Servidor escuchando en $host:$port\n";
+    }
+
+    // Bucle principal
     while (true) {
-        if (($newc = socket_accept($sock)) !== false) {
-            socket_getpeername($newc, $address, $port);
-            echo "Client has connected\n";
-            cliente($newc);
+        // Lista de sockets que queremos vigilar
+        $read = $servers; 
+        $write = $except = null;
+
+        // Esperar actividad en alguno
+        $changed = socket_select($read, $write, $except, null);
+
+        if ($changed === false) {
+            echo "Error en socket_select: " . socket_strerror(socket_last_error()) . "\n";
+            break;
+        }
+
+        // Revisar qué socket tuvo actividad
+        foreach ($read as $serverSock) {
+            if ($client = socket_accept($serverSock) !== false){
+                // Saber en qué puerto entró
+                socket_getsockname($serverSock, $addr, $port);
+                socket_getpeername($client, $client_ip, $client_port);
+                echo "Cliente desde $client_ip:$client_port conectado al puerto $port\n";
+                cliente($client);
+            }
         }
     }
 }
@@ -94,4 +120,5 @@ function refresh_peers($parts){ //escribe despues de lo que esté escrito lo que
     $body = implode("\n", $newnewparts);
     fwrite($fp, $body."\n");
     fclose($fp);
+    echo "refresh hecho\n";
 }

@@ -1,30 +1,40 @@
 <?php
-require_once "config.php";
-function client_run($argv)
-{
-    $url = $argv[1];
-    $archivoDestino = $argv[2];
-
-    // Descargar contenido de la URL
-    $contenido = file_get_contents($url);
-
-    if ($contenido === false) {
-        echo "Error al descargar el archivo.\n";
-        exit(1);
+require_once "config_client.php";
+function download_archive($argv){
+    global $dir_downloads;
+    $host = $argv[0];
+    $port = $argv[1];
+    $archivoDestino = $argv[0];
+    $newc = socket_create(AF_INET, SOCK_STREAM,getprotobyname('tcp'));
+    if ($newc === false){
+        echo "Error al crear el socket";
+        exit(-1);
+    }elseif(socket_connect($newc,$host,$port) == false){
+        echo "Error al conectar con el servidor";
+        exit(-1);
     }
+    socket_write($newc,  
+                    "GET /$argv[2]\r\n".
+                    "Content-Length: $len\r\n".
+                    "Connection: close"."\r\n"."\r\n");
+    
+    socket_write($newc, $request, strlen($request));
 
-    // Guardar en archivo local
-    if (file_put_contents($archivoDestino, $contenido) === false) {
-        echo "Error al guardar el archivo.\n";
-        exit(1);
+    $archivo = $dir_downloads."/".$argv[2];
+    $fp = fopen($archivo, "w");
+    while ($out = socket_read($newc, 2048)) {
+        fwrite($fp, $out);
     }
-
-    echo "Archivo descargado correctamente: $archivoDestino\n";
+    fclose($fp);
+    echo "Archivo descargado correctamente en: $dir_downloads\n";
 }
 
 function client_refresh($argv){
-    global $server_port, $server_host;
-    $list = scandir("htcdocs");
+    //global $server_port, $server_host;
+    global $dir_files;
+    //print_r($argv);
+    list($host,$port) = explode(":",$argv[2]);
+    $list = scandir($dir_files);
     $list1 = array_slice($list,2);
     $body = join("\n",$list1);
     $len = strlen($body);
@@ -32,16 +42,14 @@ function client_refresh($argv){
     if ($newc === false){
         echo "Error al crear el socket";
         exit(-1);
-    }elseif(socket_connect($newc,$server_host,$server_port) == false){
+    }elseif(socket_connect($newc,$host,$port) == false){
         echo "Error al conectar con el servidor";
         exit(-1);
     }
     socket_write($newc,  
                     "PUT /host/$argv[2]\r\n".
-                    "Content-lenght: $len\r\n".
+                    "Content-Length: $len\r\n".
                     "\r\n".$body);
-    
-    echo "Refresh hecho\n";
 }
 
 function search_archivo_client($arch){ //busca el archivo con el nombre completo o parcial
@@ -58,7 +66,7 @@ function client_ux($argv){ //quedaría siempre cuando se conecte hacerle un refr
             echo $options[0];
             exit(-1);
         }elseif($inst[0] === $options[1]){
-            echo $options[1];
+            download_archive($host,$port,$inst);
             exit(-1);
         }else{
             echo "Tienes estas opciones: \n"

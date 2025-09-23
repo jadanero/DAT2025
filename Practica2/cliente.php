@@ -45,6 +45,25 @@ function search_archivo_client($arch){ //busca el archivo con el nombre completo
 
 }
 
+function peer_run($sock){
+    while(true){
+        if(($newc = socket_accept($sock)) !== false){
+            while(true){
+                $lee = socket_read($sock, 1024);
+                if ($lee === false || $lee === "") {
+                exit();
+                }
+                if ($lee === "GET"){ //????????
+                    
+                }
+
+            }
+
+        }
+    }
+    exit(-1);
+}
+
 function client_ux($argv) { 
     $options = ["search","descargar","exit"];
     list($serverHost,$serverPort) = explode(":",$argv[2]);
@@ -63,9 +82,7 @@ function client_ux($argv) {
     $local_ip = gethostbyname($hostname);
     socket_bind($lsocket,$local_ip);
     socket_listen($lsocket);
-
     socket_getsockname($lsocket, $clientHost, $clientPort);
-
     echo "Servidor escuchando en $clientHost:$clientPort\n";
 
     client_refresh($newc,$clientHost,$clientPort);
@@ -77,6 +94,14 @@ function client_ux($argv) {
             sleep(10);
             client_refresh($newc,$clientHost,$clientPort);
         }
+        exit(0);
+    }
+
+    $listen = pcntl_fork();
+    if ($listen == -1) {
+        die("Error al crear proceso hijo\n");
+    } elseif ($listen === 0) {
+        peer_run($lsocket);
         exit(0);
     }
     // Proceso padre: sigue con la interacción normal

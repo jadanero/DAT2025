@@ -15,6 +15,8 @@ function cliente($newc,$client_ip,$client_port){
                 if ($parts[0] == "PUT"){
                     unset($parts[0],$parts[2],$parts[3]); //nos quedamos con lo que queremos escribir del refresh
                     $parts = array_values($parts);
+                    $clean = str_replace("/host/", "", $parts[0]);
+                    list($client_ip,$client_port) = explode(":", $clean);
                     refresh_peers($parts);
                     echo "refresh hecho de $client_ip:$client_port\n";
                 }
@@ -144,7 +146,6 @@ function borrar_peer($client_ip,$client_port){ //borra el peer que se ha descone
 }
 
 function refresh_peers($parts){ //escribe despues de lo que esté escrito lo que ha mandado el cliente
-    //Falta hacer que busque el host y las lineas en las que está su info para borrarlo y escribir los que tiene nuevos
     //no es lo ideal pero funciona
     $matriz_peers = matriz_peers_f();
     $newparts = [];

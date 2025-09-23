@@ -57,7 +57,17 @@ function client_ux($argv) {
         echo "Error al conectar con el servidor";
         exit(-1);
     }
-    socket_getsockname($newc, $clientHost, $clientPort);
+
+    $lsocket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+    $hostname = gethostname();
+    $local_ip = gethostbyname($hostname);
+    socket_bind($lsocket,$local_ip);
+    socket_listen($lsocket);
+
+    socket_getsockname($lsocket, $clientHost, $clientPort);
+
+    echo "Servidor escuchando en $clientHost:$clientPort\n";
+
     client_refresh($newc,$clientHost,$clientPort);
     $pid = pcntl_fork();
     if ($pid == -1) {

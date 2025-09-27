@@ -143,8 +143,7 @@ function borrar_peer($client_ip,$client_port){ //borra el peer que se ha descone
     fclose($fp);
 }
 
-function refresh_peers($parts){ //escribe despues de lo que esté escrito lo que ha mandado el cliente
-    //Falta hacer que busque el host y las lineas en las que está su info para borrarlo y escribir los que tiene nuevos
+function refresh_peers($parts){
     //no es lo ideal pero funciona
     $matriz_peers = matriz_peers_f();
     $newparts = [];

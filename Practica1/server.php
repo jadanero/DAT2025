@@ -15,7 +15,6 @@ function cliente($newc)
                 $path = $parts[1] ?? '/';
                 $path  = parse_url($path, PHP_URL_PATH) ?? '/';
                 $file_path = __DIR__ . $path;
-
                 $content = file_get_contents($file_path);
                 $len = strlen($content);
                 socket_write($newc,  

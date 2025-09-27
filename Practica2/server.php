@@ -1,6 +1,6 @@
 <?php
 require_once "config_server.php";
-function cliente($newc,$client_ip,$client_port){
+function cliente($newc){
     global $server_host, $server_port;
     if (pcntl_fork() == 0) {
         while (true) {
@@ -11,17 +11,21 @@ function cliente($newc,$client_ip,$client_port){
                 exit();
             }
             elseif($lee!=false){
+                $options1 = ["PUT","GET"];
+                $options2 = ["host","search","peers"];
                 $parts = preg_split('/[\r\n ]+/', $lee, -1, PREG_SPLIT_NO_EMPTY);
-                if ($parts[0] == "PUT"){
-                    unset($parts[0],$parts[2],$parts[3]); //nos quedamos con lo que queremos escribir del refresh
-                    $parts = array_values($parts);
-                    refresh_peers($parts);
-                    echo "refresh hecho de $client_ip:$client_port\n";
+                $aux = explode("/", $parts[1]);
+                $arguments = [$parts[0],$aux[1],$aux[2]];
+                if ($arguments[0] == $options1[0]){
+                    if ($arguments[1] == $options2[0]){
+                        refresh_peers($parts);
+                        echo "refresh hecho de $arguments[2]\n";
+                    }                        
                 }
-                elseif($parts[0] == "GET"){
-                    if($parts[1] == "descargar"){
+                elseif($arguments[0] == $options1[1]){  
+                    if($arguments[1] == $options2[2]){
                         //logica de descarga
-                    }elseif($parts[1] == "search"){
+                    }elseif($arguments[1] == $options2[1]){
                         $trozo_archivo = $parts[2];
                         $resultados = search_archivo_server($trozo_archivo);
                         if(!empty($resultados)){
@@ -31,6 +35,13 @@ function cliente($newc,$client_ip,$client_port){
                             $body = "No se han encontrado resultados";
                             $len = strlen($body);
                             
+                        }
+                    }elseif($arguments[1]==$options2[1]){
+                        //Logica opcional de listado de clientes
+                        if ($arguments[2] != null){
+                            //archivo de un peer concreto
+                        }else{
+                            //peers disponibles
                         }
                     }
                 }
@@ -73,7 +84,7 @@ function server_run(){
             socket_close($client);
         } elseif ($pid === 0) {
             // Hijo: atiende al cliente
-            cliente($client, $client_ip, $client_port);
+            cliente($client);
             socket_close($client);
             exit(0);
         } else {
@@ -143,8 +154,12 @@ function borrar_peer($client_ip,$client_port){ //borra el peer que se ha descone
     fclose($fp);
 }
 
-function refresh_peers($parts){
+function refresh_peers($parts){ //escribe despues de lo que esté escrito lo que ha mandado el cliente
     //no es lo ideal pero funciona
+    unset($parts[0],$parts[2],$parts[3]);
+    $parts = array_values($parts);
+    $clean = str_replace("/host/", "", $parts[0]);
+    list($client_ip,$client_port) = explode(":", $clean);
     $matriz_peers = matriz_peers_f();
     $newparts = [];
     foreach($matriz_peers as $linea){

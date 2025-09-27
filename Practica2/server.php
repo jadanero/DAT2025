@@ -16,6 +16,7 @@ function cliente($newc){
                 $parts = preg_split('/[\r\n ]+/', $lee, -1, PREG_SPLIT_NO_EMPTY);
                 $aux = explode("/", $parts[1]);
                 $arguments = [$parts[0],$aux[1],$aux[2]];
+                list($client_ip,$client_port) = explode(":",$arguments[2]);
                 if ($arguments[0] == $options1[0]){
                     if ($arguments[1] == $options2[0]){
                         refresh_peers($parts);

@@ -162,6 +162,9 @@ function client_ux($argv) {
         } elseif ($inst[0] === $options[2]) {
             echo "Saliendo...\n";
             borrarCarpeta("cliente".$clientHost.":".$clientPort);
+            socket_close($newc);
+            socket_close($lsocket);
+            posix_kill($listen, SIGTERM); // matamos al proceso hijo si salimos
             posix_kill($pid, SIGTERM); // matamos al proceso hijo si salimos
             exit(0);
         } else {

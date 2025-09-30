@@ -16,9 +16,9 @@ function cliente($newc){
                 $parts = preg_split('/[\r\n ]+/', $lee, -1, PREG_SPLIT_NO_EMPTY);
                 $aux = explode("/", $parts[1]);
                 $arguments = [$parts[0],$aux[1],$aux[2]];
-                list($client_ip,$client_port) = explode(":",$arguments[2]);
                 if ($arguments[0] == $options1[0]){
                     if ($arguments[1] == $options2[0]){
+                        list($client_ip,$client_port) = explode(":",$arguments[2]);
                         refresh_peers($parts);
                         echo "refresh hecho de $arguments[2]\n";
                     }                        
@@ -27,16 +27,9 @@ function cliente($newc){
                     if($arguments[1] == $options2[2]){
                         //logica de descarga
                     }elseif($arguments[1] == $options2[1]){
-                        $trozo_archivo = $parts[2];
-                        $resultados = search_archivo_server($trozo_archivo);
-                        if(!empty($resultados)){
-                            $body = join("\n",$resultados);
-                            $len = strlen($body);
-                        }else{
-                            $body = "No se han encontrado resultados";
-                            $len = strlen($body);
-                            
-                        }
+                        print_r($arguments);
+                        $trozo_archivo = $arguments[2];
+                        search_archivo_server($newc,$trozo_archivo,$client_ip,$client_port);
                     }elseif($arguments[1]==$options2[1]){
                         //Logica opcional de listado de clientes
                         if ($arguments[2] != null){
@@ -128,16 +121,35 @@ function matriz_peers_f(){ //crea la matriz de los peers para operar mas facil
     return $matriz;  
 }
 
-function search_archivo_server($archivo = null){ //busca el nombre de archivo en el txt
+function search_archivo_server($newc,$trozo_archivo,$client_ip,$client_port){ //busca el nombre de archivo en el txt
     $matriz_peers = matriz_peers_f();
     $resultados = [];
     foreach($matriz_peers as $linea){
         foreach($linea as $valor){
-            if(strpos($valor,$archivo) !== false && strpos($valor,"/host") === false){
-                $resultados[] = $valor." -> ".$linea[0];
-            }
+            if ($linea[0] != "/host/".$client_ip.":".$client_port){
+                if(stripos($valor,$trozo_archivo) !== false && stripos($valor,"/host") === false){
+                    $resultados[] = $valor;
+                }
+        }
         }
     }
+    if(!empty($resultados)){
+        $body = join("\n",$resultados);
+        $len = strlen($body);
+        socket_write($newc,  
+        "GET /search/ HTTP/1.1 OK\r\n".
+        "Content-Length: $len\r\n".
+        "yes".
+        "\r\n".$body);
+    }else{
+        $body = "no";
+        $len = strlen($body);
+        socket_write($newc,  
+        "GET /search/ HTTP/1.1 OK\r\n".
+        "Content-Length: $len\r\n".
+        "\r\n".$body);
+    }
+    
 }
 
 function borrar_peer($client_ip,$client_port){ //borra el peer que se ha desconectado

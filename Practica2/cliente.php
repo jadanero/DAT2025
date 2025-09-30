@@ -83,7 +83,23 @@ function client_refresh($newc,$clientHost,$clientPort){
                     "\r\n".$body);
 }
 
-function search_archivo_client($arch){ //busca el archivo con el nombre completo o parcial
+function search_archivo_client($newc,$arch){ //busca el archivo con el nombre completo o parcial
+    socket_write($newc,"GET /search/$arch\r\n");
+    $response = "";
+    while ($out = socket_read($newc, 2048)) {
+        $parts = preg_split('/[\r\n ]+/', $out, -1, PREG_SPLIT_NO_EMPTY);
+        unset($parts[0],$parts[1],$parts[2],$parts[3],$parts[4],$parts[5]);
+        if ($parts[6] === "no"){
+            echo "No se han encontrado resultados\n";
+            break;
+        }else{
+            unset($parts[6]);
+            $response = "Se han encontrado los siguientes resultados:\n";
+            $response .= join("\n",$parts);
+            echo $response."\n";
+            break;
+        }
+    }
 
 }
 
@@ -93,18 +109,17 @@ function peer_run($sock){
             while(true){
                 $lee = socket_read($sock, 1024);
                 if ($lee === false || $lee === "") {
-                exit();
+                    exit();
                 }
                 if ($lee === "GET"){ //????????
                     
                 }
-
             }
-
         }
     }
     exit(-1);
 }
+
 
 function client_ux($argv) { 
     $options = ["search","descargar","exit"];
@@ -126,8 +141,6 @@ function client_ux($argv) {
     socket_listen($lsocket);
     socket_getsockname($lsocket, $clientHost, $clientPort);
     CrearCarpetaCliente($clientHost,$clientPort);
-    echo "Servidor escuchando en $clientHost:$clientPort\n";
-
     client_refresh($newc,$clientHost,$clientPort);
     $pid = pcntl_fork();
     if ($pid == -1) {
@@ -154,8 +167,7 @@ function client_ux($argv) {
         $inst = explode(" ", $instnew);
 
         if ($inst[0] === $options[0]) {
-            echo $options[0];
-            exit(-1);
+            search_archivo_client($newc,$inst[1]);
         } elseif ($inst[0] === $options[1]) {
             download_archive($host, $port, $inst);
             exit(-1);

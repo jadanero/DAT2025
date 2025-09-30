@@ -2,32 +2,31 @@
 require_once "config_server.php";
 function cliente($newc){
     global $server_host, $server_port;
-    if (pcntl_fork() == 0) {
         while (true) {
             $lee = socket_read($newc, 1024);
             if ($lee === false || $lee === "") {
                 echo "Conexión cerrada por el cliente $client_ip:$client_port\n";
                 borrar_peer($client_ip,$client_port);
-                exit();
+                return;
             }
             elseif($lee!=false){
                 $options1 = ["PUT","GET"];
                 $options2 = ["host","search","peers"];
                 $parts = preg_split('/[\r\n ]+/', $lee, -1, PREG_SPLIT_NO_EMPTY);
                 $aux = explode("/", $parts[1]);
+                print_r($parts);
                 $arguments = [$parts[0],$aux[1],$aux[2]];
                 if ($arguments[0] == $options1[0]){
                     if ($arguments[1] == $options2[0]){
                         list($client_ip,$client_port) = explode(":",$arguments[2]);
                         refresh_peers($parts);
-                        echo "refresh hecho de $arguments[2]\n";
+                        //echo "refresh hecho de $arguments[2]\n";
                     }                        
                 }
                 elseif($arguments[0] == $options1[1]){  
                     if($arguments[1] == $options2[2]){
                         //logica de descarga
                     }elseif($arguments[1] == $options2[1]){
-                        print_r($arguments);
                         $trozo_archivo = $arguments[2];
                         search_archivo_server($newc,$trozo_archivo,$client_ip,$client_port);
                     }elseif($arguments[1]==$options2[1]){
@@ -41,8 +40,6 @@ function cliente($newc){
                 }
             }
         }
-        exit(-1);
-    } 
 }
 
 
@@ -169,7 +166,7 @@ function borrar_peer($client_ip,$client_port){ //borra el peer que se ha descone
 
 function refresh_peers($parts){ //escribe despues de lo que esté escrito lo que ha mandado el cliente
     //no es lo ideal pero funciona
-    unset($parts[0],$parts[2],$parts[3]);
+    unset($parts[0],$parts[2],$parts[3],$parts[4],$parts[5]);
     $parts = array_values($parts);
     $clean = str_replace("/host/", "", $parts[0]);
     list($client_ip,$client_port) = explode(":", $clean);

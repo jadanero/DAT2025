@@ -56,7 +56,7 @@ function download_archive($argv){
         exit(-1);
     }
     socket_write($newc,  
-                    "GET /$argv[2]\r\n".
+                    "GET /$argv[2] HTTP/1.1 OK\r\n".
                     "Content-Length: $len\r\n".
                     "Connection: close"."\r\n"."\r\n");
     
@@ -78,13 +78,13 @@ function client_refresh($newc,$clientHost,$clientPort){
     $body = join("\n",$list1);
     $len = strlen($body);
     socket_write($newc,  
-                    "PUT /host/$clientHost:$clientPort\r\n".
+                    "PUT /host/$clientHost:$clientPort HTTP/1.1 OK\r\n".
                     "Content-Length: $len\r\n".
                     "\r\n".$body);
 }
 
 function search_archivo_client($newc,$arch){ //busca el archivo con el nombre completo o parcial
-    socket_write($newc,"GET /search/$arch\r\n");
+    socket_write($newc,"GET /search/$arch HTTP/1.1 OK\r\n");
     $response = "";
     while ($out = socket_read($newc, 2048)) {
         $parts = preg_split('/[\r\n ]+/', $out, -1, PREG_SPLIT_NO_EMPTY);

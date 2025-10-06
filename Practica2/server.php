@@ -14,18 +14,18 @@ function cliente($newc){
                 $options2 = ["host","search","peers"];
                 $parts = preg_split('/[\r\n ]+/', $lee, -1, PREG_SPLIT_NO_EMPTY);
                 $aux = explode("/", $parts[1]);
-                print_r($parts);
+                //print_r($parts);
                 $arguments = [$parts[0],$aux[1],$aux[2]];
                 if ($arguments[0] == $options1[0]){
                     if ($arguments[1] == $options2[0]){
                         list($client_ip,$client_port) = explode(":",$arguments[2]);
                         refresh_peers($parts);
-                        //echo "refresh hecho de $arguments[2]\n";
                     }                        
                 }
                 elseif($arguments[0] == $options1[1]){  
                     if($arguments[1] == $options2[2]){
-                        //logica de descarga
+                        $archivo = $arguments[2];
+                        peer_name($newc,$client_ip,$client_port,$archivo);
                     }elseif($arguments[1] == $options2[1]){
                         $trozo_archivo = $arguments[2];
                         search_archivo_server($newc,$trozo_archivo,$client_ip,$client_port);
@@ -184,4 +184,34 @@ function refresh_peers($parts){ //escribe despues de lo que esté escrito lo que
     $body = implode("\n", $newnewparts);
     fwrite($fp, $body."\n");
     fclose($fp);
+}
+
+function peer_name($newc,$client_ip,$client_port,$archivo){ //devuelve el nombre del peer que tiene ese archivo
+    $matriz_peers = matriz_peers_f();
+    $resultado = "";
+    foreach($matriz_peers as $linea){
+        foreach($linea as $valor){
+            if ($linea[0] != "/host/".$client_ip.":".$client_port){
+                if(stripos($valor,$archivo) !== false){
+                    $resultado = $linea[0];
+                    break 2;
+                }
+            }
+        }
+    }
+    if(!empty($resultado)){
+        $body = $resultado;
+        $len = strlen($body);
+        socket_write($newc,  
+        "GET /peers/ HTTP/1.1 OK\r\n".
+        "yes".
+        "\r\n".$body);
+    }else{
+        $body = "no";
+        $len = strlen($body);
+        socket_write($newc,  
+        "GET /peers/ HTTP/1.1 OK\r\n".
+        "no".
+        "\r\n".$body);
+    }
 }

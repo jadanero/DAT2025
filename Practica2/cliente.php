@@ -42,33 +42,28 @@ function borrarCarpeta($ruta) {
     return rmdir($ruta);
 }
 
-function download_archive($argv){
-    global $dir_downloads;
-    $host = $argv[0];
-    $port = $argv[1];
-    $archivoDestino = $argv[0];
-    $newc = socket_create(AF_INET, SOCK_STREAM,getprotobyname('tcp'));
-    if ($newc === false){
-        echo "Error al crear el socket";
-        exit(-1);
-    }elseif(socket_connect($newc,$host,$port) == false){
-        echo "Error al conectar con el servidor";
-        exit(-1);
-    }
-    socket_write($newc,  
-                    "GET /$argv[2] HTTP/1.1 OK\r\n".
-                    "Content-Length: $len\r\n".
-                    "Connection: close"."\r\n"."\r\n");
-    
-    socket_write($newc, $request, strlen($request));
-
-    $archivo = $dir_downloads."/".$argv[2];
-    $fp = fopen($archivo, "w");
+function download_archive($newc,$inst){ //descarga el archivo del peer
+    socket_write($newc,"GET /peers/$inst[1] HTTP/1.1 OK\r\n");
     while ($out = socket_read($newc, 2048)) {
-        fwrite($fp, $out);
+        $parts = preg_split('/[\r\n ]+/', $out, -1, PREG_SPLIT_NO_EMPTY);
+        print_r($parts);
+        exit(0);
+        unset($parts[0],$parts[1],$parts[2],$parts[3],$parts[4],$parts[5]);
+        if ($parts[6] === "no"){
+            echo "No se han encontrado resultados\n";
+            break;
+        }else{
+            $socketpeer = socket_create(AF_INET, SOCK_STREAM,getprotobyname('tcp'));
+            socket_bind($socketpeer, $parts[6], $parts[7]);
+            $fp = fopen($archivo, "w");
+        while ($out = socket_read($newc, 2048)) {
+            fwrite($fp, $out);
+        }
+        fclose($fp);
+        break;
+        }
     }
-    fclose($fp);
-    echo "Archivo descargado correctamente en: $dir_downloads\n";
+    
 }
 
 function client_refresh($newc,$clientHost,$clientPort){
@@ -112,7 +107,7 @@ function peer_run($sock){
                     exit();
                 }
                 if ($lee === "GET"){ //????????
-                    
+                    echo "GET recibido de P2P\n";
                 }
             }
         }
@@ -165,12 +160,10 @@ function client_ux($argv) {
         echo ">";
         $instnew = trim(fgets(STDIN));
         $inst = explode(" ", $instnew);
-
         if ($inst[0] === $options[0]) {
             search_archivo_client($newc,$inst[1]);
         } elseif ($inst[0] === $options[1]) {
-            download_archive($host, $port, $inst);
-            exit(-1);
+            download_archive($newc,$inst);
         } elseif ($inst[0] === $options[2]) {
             echo "Saliendo...\n";
             borrarCarpeta("cliente".$clientHost.":".$clientPort);

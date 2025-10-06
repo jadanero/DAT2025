@@ -200,7 +200,7 @@ function peer_name($newc,$client_ip,$client_port,$archivo){ //devuelve el nombre
         }
     }
     if(!empty($resultado)){
-        $body = $resultado;
+        $body = $resultado."\r\n".$archivo;
         $len = strlen($body);
         socket_write($newc,  
         "GET /peers/ HTTP/1.1 OK\r\n".

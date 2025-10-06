@@ -42,25 +42,39 @@ function borrarCarpeta($ruta) {
     return rmdir($ruta);
 }
 
-function download_archive($newc,$inst){ //descarga el archivo del peer
+function download_archive($newc,$inst,$ip,$port){ //descarga el archivo del peer
     socket_write($newc,"GET /peers/$inst[1] HTTP/1.1 OK\r\n");
     while ($out = socket_read($newc, 2048)) {
         $parts = preg_split('/[\r\n ]+/', $out, -1, PREG_SPLIT_NO_EMPTY);
-        print_r($parts);
-        exit(0);
-        unset($parts[0],$parts[1],$parts[2],$parts[3],$parts[4],$parts[5]);
-        if ($parts[6] === "no"){
+        if ($parts[4] === "no"){
             echo "No se han encontrado resultados\n";
             break;
         }else{
+            $result = str_replace("/host/", "", $parts[5]);
+            list($peer_ip,$peer_port) = explode(":",$result);
             $socketpeer = socket_create(AF_INET, SOCK_STREAM,getprotobyname('tcp'));
-            socket_bind($socketpeer, $parts[6], $parts[7]);
-            $fp = fopen($archivo, "w");
-        while ($out = socket_read($newc, 2048)) {
-            fwrite($fp, $out);
-        }
-        fclose($fp);
-        break;
+            if (socket_connect($socketpeer,$peer_ip,$peer_port) == false){
+                echo "Error al conectar con el peer";
+                break;
+            }else{
+                $archivo = $parts[6];
+                $ruta_archivo = "cliente".$peer_ip.":".$peer_port."/uploads/".$archivo;
+                socket_write($socketpeer,"GET ".$ruta_archivo." HTTP/1.1 OK\r\n");
+                $ruta_descarga = "cliente".$ip.":".$port."/downloads/".$archivo;
+                $fp = fopen($ruta_descarga, "w");
+            }
+        
+            $buffer = "";
+            while ($out = socket_read($socketpeer, 2048)) {
+                $buffer .= $out;
+            }
+            $partes = explode("\r\n\r\n", $buffer, 2);
+            $contenido = $partes[1] ?? "";
+            fwrite($fp, $contenido);
+            fclose($fp);
+            socket_close($socketpeer);
+            echo "Archivo descargado correctamente\n";
+            break;
         }
     }
     
@@ -102,12 +116,24 @@ function peer_run($sock){
     while(true){
         if(($newc = socket_accept($sock)) !== false){
             while(true){
-                $lee = socket_read($sock, 1024);
+                $lee = socket_read($newc, 1024);
+                $parts = preg_split('/[\r\n ]+/', $lee, -1, PREG_SPLIT_NO_EMPTY);
                 if ($lee === false || $lee === "") {
-                    exit();
+                    socket_close($newc);
+                    break;
                 }
-                if ($lee === "GET"){ //????????
-                    echo "GET recibido de P2P\n";
+                if ($parts[0] === "GET"){
+                    $content = file_get_contents($parts[1]);
+                    if ($content === false) {
+                        $content = "no";
+                    }
+                    $len = strlen($content);
+                    socket_write($newc,  
+                        "HTTP/1.1 200 OK\r\n".
+                        "Content-lenght: $len\r\n".
+                        "\r\n".$content);
+                    socket_close($newc);
+                    break;
                 }
             }
         }
@@ -153,7 +179,6 @@ function client_ux($argv) {
         die("Error al crear proceso hijo\n");
     } elseif ($listen === 0) {
         peer_run($lsocket);
-        exit(0);
     }
     // Proceso padre: sigue con la interacción normal
     while (true) {
@@ -163,7 +188,7 @@ function client_ux($argv) {
         if ($inst[0] === $options[0]) {
             search_archivo_client($newc,$inst[1]);
         } elseif ($inst[0] === $options[1]) {
-            download_archive($newc,$inst);
+            download_archive($newc,$inst,$clientHost,$clientPort);
         } elseif ($inst[0] === $options[2]) {
             echo "Saliendo...\n";
             borrarCarpeta("cliente".$clientHost.":".$clientPort);
@@ -176,7 +201,7 @@ function client_ux($argv) {
             echo "Tienes estas opciones: \n"
                 .$options[0]." trozo de archivo que quieras encontrar\n"
                 .$options[1]." nombre de archivo completo\n"
-                .$options[2]." para salir\n>";
+                .$options[2]." para salir\n";
         }
     }
     exit(-1);

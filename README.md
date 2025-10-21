@@ -11,7 +11,7 @@ Marca cada elemento conforme se complete ✅
 ## Actuador/Sonda - solo parte de test
 
 - [x] Mandar mensaje con datos - sonda.sh
-- [ ] recibir comandos - sonda_cambio.sh
+- [x] recibir comandos - sonda_cambio.sh
 - [ ] Resultado del estado - resultado_estado.sh
 
 

@@ -1,5 +1,5 @@
 <?php
-$input = file_get_contents("php://input");
+$input = file_get_contents("php://");
 $data = json_decode($input, true);
 
 if ($data === null) {

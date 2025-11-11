@@ -12,7 +12,7 @@ Marca cada elemento conforme se complete ✅
 
 - [x] Mandar mensaje con datos - sonda.sh
 - [x] recibir comandos - sonda_cambio.sh
-- [x] Resultado del estado - resultado_estado.sh
+- [ ] Resultado del estado - resultado_estado.sh
 
 
 ---
@@ -20,14 +20,14 @@ Marca cada elemento conforme se complete ✅
 ## Agregador
 
 - [x] Llegada de mensaje con datos de la sonda - dato.php
-- [x] Mandar datos al controlador y borrar dato de agregador - datos_controlador.php/datos_controlador.sh
+- [x] Mandar datos al controlador y borrar dato de agregador - datos_agregador.php/datos_agregador.sh
 - [ ] Comandos del controlador al agregador - comandos_agregador.php/comandos_agregador.sh
 - [ ] Confirma cambio de estado en la sonda - cambioestado_agregador.php/cambioestado_agregador.sh
 
 ---
 
 ## Controlador
-- [ ] Servicio REST que recoje los datos del agregador - resultados_agregador.sh
+- [ ] Servicio REST que recoje los datos del agregador - resultados_agregador.sh/resultados_agregador.php
 - [ ] Mandar comandos al agregador - comandos.php
     - Tests unitarios de cada comando
     - [ ] comando1.sh

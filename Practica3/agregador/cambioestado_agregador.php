@@ -17,7 +17,7 @@ if (!$data || !isset($data['IDsonda']) || !isset($data['accion']) || !isset($dat
 }
 
 // Guardar en log de acciones ejecutadas
-$fileLog = __DIR__ . '/accionesEjecutadas.txt';
+$fileLog = '/mnt/usb/www/practica3/accionesEjecutadas.txt';
 $linea = json_encode([
     "timestamp" => date("Y-m-d H:i:s"),
     "IDsonda"   => $data['IDsonda'],
@@ -27,7 +27,7 @@ $linea = json_encode([
 file_put_contents($fileLog, $linea . "\n", FILE_APPEND);
 
 // Borrar la acción correspondiente de las pendientes
-$filePend = __DIR__ . '/accionesPendientes.txt';
+$filePend = '/mnt/usb/www/practica3/accionesPendientes.txt';
 if (file_exists($filePend)) {
     $lineas = file($filePend, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $nuevas = [];

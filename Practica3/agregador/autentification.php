@@ -12,8 +12,15 @@ if (in_array($user, array_keys($users)) == false) {
     die();
 }
 $hash_esperado = $users[$user];
-$hash_recibido = hash('sha256', $pass);
-if ($hash_recibido !== $hash_esperado) {
+if (function_exists('hash')) {
+    $hash_recibido = hash('sha256', $pass);
+} elseif (function_exists('hash_hmac')) {
+    $hash_recibido = hash_hmac('sha256', $pass, '');
+} else {
+    $hash_recibido = sha1($pass);
+}
+
+if ($hash_recibido != $hash_esperado) {
     header("HTTP/1.0 401 Unauthorized");
     die();
 }

@@ -1,2 +1,0 @@
-{"IDsonda":"34","accion":"abrir_valvula","param":"A"}
-{"IDsonda":"34","accion":"apagar_led","param":"1"}

@@ -1,9 +1,9 @@
 <?php
 // datos_controlador.php
-// Reenvía los datos de la carpeta 'datos/' al controlador y luego los borra
+// Reenvia los datos de la carpeta 'datos/' al controlador y luego los borra
 
 $carpeta = __DIR__ . "/datos";  // Carpeta donde se guardan los datos
-//$url_controlador = "http://localhost:6000/controlador_simulado.php";  // Dirección del controlador
+$url_controlador = "http://localhost:6000/controlador_simulado.php";  // Dirección del controlador
 
 // Comprobar que la carpeta existe
 if (!is_dir($carpeta)) {
@@ -18,17 +18,20 @@ if (count($archivos) == 0) {
     exit();
 }
 
+echo "Reenviando " . count($archivos) . " archivos al controlador...\n\n";
+
 foreach ($archivos as $archivo) {
     // Leer el contenido JSON del archivo
     $contenido = file_get_contents($archivo);
     $data = json_decode($contenido, true);
 
     if (!$data) {
-        echo "Archivo inválido.\n";
+        echo "Archivo invalido.\n";
         continue;
     }
 
-    // Enviar al controlador con curl -----------------------------------------
+    // Enviar al controlador con curl
+    $ch = curl_init($url_controlador);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
@@ -47,5 +50,5 @@ foreach ($archivos as $archivo) {
     }
 }
 
-echo "Proceso de reenvío completado.\n";
-?>
+echo "Proceso de reenvio completado.\n";
+

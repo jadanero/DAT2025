@@ -1,0 +1,3 @@
+34:{"IDsonda":"34","accion":"abrir_valvula","param":"A"}
+12:{"IDsonda":"12","accion":"cerrar_valvula","param":"A"}
+1:{"IDsonda":"1","accion":"encender_led","param":"A"}
